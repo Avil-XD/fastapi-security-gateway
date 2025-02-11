@@ -1,0 +1,52 @@
+# Zero-Trust API Communication Policies
+policy_version: 1.1
+max_request_size: 1048576  # 1MB in bytes
+policies:
+  - name: graphql_depth_control
+    description: Prevent nested query attacks
+    rules:
+      - max_depth: 6
+        action: reject
+      - query_complexity: 1000
+        action: throttle
+
+  - name: parameter_sanitization
+    description: Prevent injection attacks
+    rules:
+      - pattern: '[;\\]'
+        fields: [query, body]
+        action: sanitize
+
+  - name: behavioral_baseline
+    description: AI-driven anomaly detection
+    metrics:
+      - request_frequency
+      - parameter_variation
+      - response_size
+    training_window: 14d
+
+  - name: self_healing
+    actions:
+      - type: circuit_breaker
+        threshold: 500ms
+      - type: rate_limit
+        requests_per_minute: 1000
+      - type: schema_validation
+        strict: true
+
+  - name: rate_limit
+    description: Global API rate limiting
+    rules:
+      - max_requests_per_minute: 1000
+        action: throttle
+      - burst_capacity: 50
+        action: reject
+
+  - name: jwt_validation
+    description: Validate JWT tokens
+    rules:
+      - required_claims: ["sub", "iss", "exp"]
+        algorithms: ["RS256"]
+        clock_skew: 30
+jwt:
+  secret_env: JWT_SECRET
