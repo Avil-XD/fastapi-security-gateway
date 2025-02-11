@@ -1,103 +1,141 @@
-# 🛡️ FastAPI Security Gateway
+# API Security Gateway
 
-A robust and scalable API Security Gateway built with FastAPI that provides advanced security features, real-time monitoring, and self-healing capabilities for protecting your APIs.
+A comprehensive API security solution that provides zero-trust security, anomaly detection, and self-healing capabilities for modern APIs.
 
----
+## Features
 
-## ✨ Key Features
+- **Zero-Trust Security**
+  - Request validation and sanitization
+  - JWT token validation
+  - Rate limiting and burst control
+  - GraphQL depth and complexity control
 
-- 🚀 **Real-time threat detection** and anomaly monitoring
-- ✅ **Comprehensive security middleware** with request validation
-- 📊 **Rate limiting** and request size validation
-- 🔄 **Self-healing system monitoring**
-- 🔐 **Security headers management**
-- 📈 **Analytics dashboard** with traffic and security metrics
-- ⚙️ **Configurable security policies** via YAML
-- 💡 **Health check monitoring** with system metrics
-- 🌍 **CORS middleware support**
-- 🔑 **Basic HTTP authentication**
+- **AI-Driven Anomaly Detection**
+  - Machine learning-based request analysis
+  - Behavioral baseline modeling
+  - Real-time anomaly detection
+  - Configurable thresholds and metrics
 
----
+- **Self-Healing Capabilities**
+  - Circuit breaker pattern
+  - Automatic rate limiting
+  - Schema validation
+  - Adaptive security measures
 
-## 🛠️ Technical Stack
+- **Monitoring and Analytics**
+  - Real-time metrics dashboard
+  - Detailed logging
+  - Performance analytics
+  - Security incident tracking
 
-- **Python 3.x**
-- **FastAPI**
-- **YAML** for configuration
-- **psutil** for system monitoring
-- **Custom threat detection** and self-healing modules
+## Requirements
 
----
+- Python 3.10+
+- Dependencies listed in requirements.txt
 
-## 🚀 Quick Start
+## Installation
 
-### 1️⃣ Clone the Repository
+1. Clone the repository:
 ```bash
-git clone https://github.com/yourusername/fastapi-security-gateway.git
-cd fastapi-security-gateway
+git clone https://github.com/yourusername/api-security.git
+cd api-security
 ```
 
-### 2️⃣ Install Dependencies
+2. Create and activate a virtual environment:
+```bash
+python -m venv .venv
+source .venv/bin/activate  # For Linux/Mac
+# OR
+.venv\Scripts\activate  # For Windows
+```
+
+3. Install dependencies:
 ```bash
 pip install -r requirements.txt
 ```
 
-### 3️⃣ Run the Application
+4. Configure security policies:
+- Copy config/security_policies.yaml.example to config/security_policies.yaml
+- Update the settings according to your needs
+- Set up your JWT secret in the environment variable JWT_SECRET
+
+## Usage
+
+1. Start the server:
 ```bash
-python main.py
+uvicorn main:app --reload
 ```
-The server will start at: **http://127.0.0.1:8000**
 
----
+2. Access the dashboard:
+- Open http://localhost:8000/dashboard in your browser
+- View real-time metrics and security analytics
 
-## 📊 API Endpoints
+3. API Endpoints:
+- GET / - Basic system information
+- GET /health - Detailed health check
+- GET /analytics - Security analytics
+- POST /api/test - Test endpoint with security features
+- GET /settings - View current settings
+- POST /settings - Update settings
 
-| Endpoint      | Description                                   |
-|--------------|-------------------------------------------|
-| `/`          | Root endpoint with system status         |
-| `/health`    | Health check with detailed metrics       |
-| `/dashboard` | Admin dashboard                          |
-| `/analytics` | Traffic and security analytics          |
-| `/settings`  | Gateway configuration                   |
-| `/logs`      | System logs                             |
-| `/api/test`  | Security features test endpoint        |
+## Configuration
 
----
+The system is configured through security_policies.yaml with the following sections:
 
-## 🔐 Security Features
+1. **GraphQL Control**
+   - max_depth: Maximum query depth
+   - query_complexity: Maximum query complexity
 
-- ✅ Request size validation
-- 🔐 Security headers (**X-Frame-Options, X-Content-Type-Options, X-XSS-Protection**)
-- 🛡️ Anomaly detection
-- 🔄 Self-healing capabilities
-- 🚦 Rate limiting
-- 🌍 CORS protection
+2. **Parameter Sanitization**
+   - Custom patterns and rules for request sanitization
+   - Field-specific sanitization rules
 
----
+3. **Behavioral Baseline**
+   - Machine learning parameters
+   - Anomaly detection thresholds
+   - Training window configuration
 
-## 📖 Documentation
+4. **Self-Healing**
+   - Circuit breaker thresholds
+   - Rate limiting rules
+   - Schema validation settings
 
-API documentation is available at:
-- **Swagger UI**: [`/docs`](http://127.0.0.1:8000/docs)
-- **ReDoc**: [`/redoc`](http://127.0.0.1:8000/redoc)
+## Development
 
----
+To extend or modify the system:
 
-## 🤝 Contributing
+1. Anomaly Detection:
+   - Modify threat_detection/anomaly_detection.py
+   - Update behavioral baselines in config/
 
-Contributions are welcome! 🎉 If you'd like to contribute:
-1. Fork the repository
-2. Create a new branch (`git checkout -b feature-branch`)
-3. Commit your changes (`git commit -m 'Add new feature'`)
-4. Push to the branch (`git push origin feature-branch`)
-5. Submit a Pull Request 🚀
+2. Self-Healing:
+   - Customize self_healing/controller.py
+   - Add new healing strategies
 
----
+3. API Endpoints:
+   - Add routes to main.py
+   - Implement new security features
 
-## 📝 License
+## Production Deployment
 
-This project is licensed under the **MIT License**. See the [LICENSE](LICENSE) file for details.
+For production deployment:
 
----
+1. Security Considerations:
+   - Set proper rate limits
+   - Configure strict CORS settings
+   - Use secure JWT settings
+   - Enable HTTPS
 
-### 🌟 If you like this project, consider giving it a ⭐ on GitHub!
+2. Performance Optimization:
+   - Adjust behavioral baseline parameters
+   - Fine-tune anomaly detection thresholds
+   - Configure appropriate resource limits
+
+3. Monitoring Setup:
+   - Configure logging
+   - Set up alerts
+   - Monitor system metrics
+
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.

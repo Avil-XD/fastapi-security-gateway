@@ -11,18 +11,13 @@ import psutil
 import datetime
 from pathlib import Path
 
-# Import custom modules
-from self_healing.controller import SelfHealingController
-from threat_detection.anomaly_detection import APIAnalyzer
-
 app = FastAPI(title="API Security Gateway")
 
-class PolicyLoader:
-    def __init__(self, policies):
-        self.policies = policies
-    
-    def get_policies(self, section):
-        return self.policies.get(section, {})
+# Global variables
+security_policies = {}
+policy_loader = None
+self_healing_controller = None
+api_analyzer = None
 
 # Security Configuration
 security = HTTPBasic()
@@ -51,16 +46,41 @@ async def startup_event():
     """Initialize components on startup"""
     global security_policies, policy_loader, self_healing_controller, api_analyzer
     try:
+        # Define PolicyLoader class
+        class PolicyLoader:
+            def __init__(self, policies):
+                self.policies = policies
+            
+            def get_policies(self, section):
+                return self.policies.get(section, {})
+
+        # Import custom modules
+        from self_healing.controller import SelfHealingController
+        from threat_detection.anomaly_detection import APIAnalyzer
+
+        print("Loading security policies...")
         # Load security policies
         with open("config/security_policies.yaml", "r") as f:
             security_policies = yaml.safe_load(f)
         
+        print("Initializing components...")
         # Initialize components
         policy_loader = PolicyLoader(security_policies)
         self_healing_controller = SelfHealingController(policy_loader)
         api_analyzer = APIAnalyzer()
+        print("Startup completed successfully")
+
+    except FileNotFoundError as e:
+        print(f"Error: Could not find security policies file - {e}")
+        raise
+    except yaml.YAMLError as e:
+        print(f"Error: Invalid YAML in security policies - {e}")
+        raise
+    except ImportError as e:
+        print(f"Error: Failed to import required modules - {e}")
+        raise
     except Exception as e:
-        print(f"Startup error: {e}")
+        print(f"Unexpected error during startup: {e}")
         raise
 
 @app.get("/")

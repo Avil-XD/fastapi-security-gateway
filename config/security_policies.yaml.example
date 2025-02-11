@@ -36,11 +36,14 @@ policies:
   - name: self_healing
     actions:
       - type: circuit_breaker
-        threshold: 500ms
+        threshold: 500ms  # Response time threshold
+        reset_time: 30s  # Time to wait before resetting circuit breaker
       - type: rate_limit
         requests_per_minute: 1000
+        burst_capacity: 50
       - type: schema_validation
         strict: true
+        max_depth: 10
 
   - name: rate_limit
     description: Global API rate limiting
@@ -55,6 +58,33 @@ policies:
     rules:
       - required_claims: ["sub", "iss", "exp"]
         algorithms: ["RS256"]
-        clock_skew: 30
+        clock_skew: 30  # seconds
+        issuer: "your-auth-server"  # Update this
+        audience: "your-api"  # Update this
+
 jwt:
-  secret_env: JWT_SECRET
+  # In production, set this via environment variable JWT_SECRET
+  secret_env: JWT_SECRET  # Use secure, random value
+  refresh_window: 300  # 5 minutes before expiry
+  token_expiry: 3600  # 1 hour
+
+# Monitoring and alerting settings
+monitoring:
+  log_level: INFO
+  metrics_enabled: true
+  alert_threshold: 80  # CPU/Memory threshold for alerts
+  alert_channels:
+    - type: email
+      enabled: false
+      recipients: ["admin@example.com"]
+    - type: slack
+      enabled: false
+      webhook_url: "https://hooks.slack.com/services/your/webhook/url"
+
+# CORS settings
+cors:
+  allowed_origins: ["https://your-frontend-domain.com"]
+  allowed_methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
+  allowed_headers: ["Authorization", "Content-Type"]
+  expose_headers: ["X-Rate-Limit"]
+  max_age: 600  # 10 minutes
