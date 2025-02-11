@@ -12,10 +12,17 @@ import datetime
 from pathlib import Path
 
 # Import custom modules
-from self_healing import controller as self_healing
-from threat_detection import anomaly_detection
+from self_healing.controller import SelfHealingController
+from threat_detection.anomaly_detection import APIAnalyzer
 
 app = FastAPI(title="API Security Gateway")
+
+class PolicyLoader:
+    def __init__(self, policies):
+        self.policies = policies
+    
+    def get_policies(self, section):
+        return self.policies.get(section, {})
 
 # Security Configuration
 security = HTTPBasic()
@@ -33,9 +40,28 @@ app.add_middleware(
 # Static files
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
-# Load security policies
-with open("config/security_policies.yaml", "r") as f:
-    security_policies = yaml.safe_load(f)
+# Global variables
+security_policies = {}
+policy_loader = None
+self_healing_controller = None
+api_analyzer = None
+
+@app.on_event("startup")
+async def startup_event():
+    """Initialize components on startup"""
+    global security_policies, policy_loader, self_healing_controller, api_analyzer
+    try:
+        # Load security policies
+        with open("config/security_policies.yaml", "r") as f:
+            security_policies = yaml.safe_load(f)
+        
+        # Initialize components
+        policy_loader = PolicyLoader(security_policies)
+        self_healing_controller = SelfHealingController(policy_loader)
+        api_analyzer = APIAnalyzer()
+    except Exception as e:
+        print(f"Startup error: {e}")
+        raise
 
 @app.get("/")
 async def root():
@@ -142,15 +168,30 @@ async def get_logs(limit: int = 50):
 async def test_endpoint(request: Request):
     """Test endpoint for security features"""
     try:
+        # Get request data
+        request_data = await request.json()
+        
         # Anomaly detection
-        anomalies = anomaly_detection.check_request(await request.json())
-        if anomalies:
-            print(f"ALERT: Anomalies detected {anomalies}")
+        if not api_analyzer.analyze_request(request_data):
+            return JSONResponse(
+                status_code=403,
+                content={"error": "Anomalous request detected"}
+            )
 
         # Self-healing checks
-        healing_response = self_healing.check_system_health()
-        if healing_response.get("action_taken"):
-            print(f"Self-healing: {healing_response['action_taken']}")
+        request_context = {
+            "path": request.url.path,
+            "method": request.method,
+            "headers": dict(request.headers),
+            "query_params": dict(request.query_params),
+            "body": request_data
+        }
+        
+        if not self_healing_controller.apply_measures(request_context):
+            return JSONResponse(
+                status_code=429,
+                content={"error": "Request rejected by self-healing measures"}
+            )
 
         return {"message": "Request passed security checks"}
 
@@ -166,7 +207,8 @@ async def security_middleware(request: Request, call_next):
     try:
         # Check request size
         content_length = request.headers.get("content-length", 0)
-        if int(content_length) > security_policies["max_request_size"]:
+        max_size = security_policies.get("max_request_size", 1048576)  # Default to 1MB
+        if int(content_length) > max_size:
             return JSONResponse(
                 status_code=413,
                 content={"detail": "Payload exceeds size limit"}
