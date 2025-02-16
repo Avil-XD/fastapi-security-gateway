@@ -1,25 +1,43 @@
+# Python
 __pycache__/
 *.py[cod]
 *$py.class
 *.so
 .Python
+.env
+venv/
+.venv/
+ENV/
 env/
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
+env.bak/
+venv.bak/
 *.egg-info/
+dist/
+build/
+eggs/
+parts/
+var/
+sdist/
+develop-eggs/
 .installed.cfg
 *.egg
-.env
-jwt_secret.txt
+
+# IDEs
 .idea/
 .vscode/
-venv/.venv/
+*.swp
+*.swo
+.project
+.pydevproject
+.settings/
+
+# Project specific
+jwt_secret.txt
+*.log
+.env.local
+.env.*.local
+.pytest_cache/
+
+# System
+.DS_Store
+Thumbs.db
