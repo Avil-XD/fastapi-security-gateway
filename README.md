@@ -37,8 +37,8 @@ A comprehensive API security solution that provides zero-trust security, anomaly
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/yourusername/api-security.git
-cd api-security
+git clone https://github.com/Avil-XD/fastapi-security-gateway.git
+cd fastapi-security-gateway
 ```
 
 2. Create and activate a virtual environment:
@@ -63,7 +63,11 @@ pip install -r requirements.txt
 
 1. Start the server:
 ```bash
-uvicorn main:app --reload
+# For development with debug mode:
+python debug_fastapi.py
+
+# For production:
+uvicorn main:app --host 127.0.0.1 --port 8000
 ```
 
 2. Access the dashboard:
@@ -73,10 +77,31 @@ uvicorn main:app --reload
 3. API Endpoints:
 - GET / - Basic system information
 - GET /health - Detailed health check
-- GET /analytics - Security analytics
-- POST /api/test - Test endpoint with security features
-- GET /settings - View current settings
-- POST /settings - Update settings
+- GET /metrics - System metrics and analytics
+- POST /api/* - Protected API endpoints with security features
+- GET /docs - Interactive API documentation
+- GET /settings - View current security settings
+- POST /settings - Update security settings
+
+## Testing
+
+The project includes several test utilities:
+
+1. Basic API Tests:
+```bash
+python test_fastapi.py
+```
+
+2. Startup Tests:
+```bash
+python test_startup.py  # With all warnings
+python test_startup_no_warn.py  # Without warnings
+```
+
+3. Minimal Example:
+```bash
+python minimal.py  # Runs a minimal version of the API for testing
+```
 
 ## Configuration
 
@@ -115,6 +140,11 @@ To extend or modify the system:
 3. API Endpoints:
    - Add routes to main.py
    - Implement new security features
+
+4. Testing:
+   - Add new test cases to test_fastapi.py
+   - Use debug_fastapi.py for development testing
+   - Create minimal examples in minimal.py
 
 ## Production Deployment
 

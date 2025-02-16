@@ -59,6 +59,8 @@ policies:
       - required_claims: ["sub", "iss", "exp"]
         algorithms: ["RS256"]
         clock_skew: 30  # seconds
+        issuer: "fastapi-security-gateway"
+        audience: "protected-api"
 
 jwt:
   secret_env: JWT_SECRET
@@ -73,12 +75,14 @@ monitoring:
   alert_channels:
     - type: email
       enabled: false
+      recipients: ["admin@yourdomain.com"]
     - type: slack
       enabled: false
+      webhook_url: "https://hooks.slack.com/services/your/webhook/url"
 
 # CORS settings
 cors:
-  allowed_origins: ["*"]
+  allowed_origins: ["http://localhost:3000", "https://yourdomain.com"]
   allowed_methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
   allowed_headers: ["Authorization", "Content-Type"]
   expose_headers: ["X-Rate-Limit"]
