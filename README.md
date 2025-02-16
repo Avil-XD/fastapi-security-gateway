@@ -1,171 +1,147 @@
-# API Security Gateway
+# FastAPI Security Gateway
 
-A comprehensive API security solution that provides zero-trust security, anomaly detection, and self-healing capabilities for modern APIs.
+🛡️ A lightweight, production-ready API security gateway built with FastAPI. Protect your APIs with zero-trust security, AI-driven anomaly detection, and self-healing capabilities.
 
-## Features
+## 🌟 Features
 
-- **Zero-Trust Security**
-  - Request validation and sanitization
-  - JWT token validation
-  - Rate limiting and burst control
-  - GraphQL depth and complexity control
+- 🔒 **Zero-Trust Security**
+  - Request validation & sanitization
+  - JWT authentication
+  - Rate limiting
+  - GraphQL query control
 
-- **AI-Driven Anomaly Detection**
-  - Machine learning-based request analysis
-  - Behavioral baseline modeling
-  - Real-time anomaly detection
-  - Configurable thresholds and metrics
+- 🤖 **AI-Driven Protection**
+  - ML-based anomaly detection
+  - Behavioral analysis
+  - Real-time threat detection
 
-- **Self-Healing Capabilities**
+- 🔄 **Self-Healing**
   - Circuit breaker pattern
   - Automatic rate limiting
   - Schema validation
-  - Adaptive security measures
 
-- **Monitoring and Analytics**
-  - Real-time metrics dashboard
-  - Detailed logging
-  - Performance analytics
-  - Security incident tracking
+## 🚀 Quick Start
 
-## Requirements
-
-- Python 3.10+
-- Dependencies listed in requirements.txt
-
-## Installation
-
-1. Clone the repository:
+1. **Install**
 ```bash
+# Clone repository
 git clone https://github.com/Avil-XD/fastapi-security-gateway.git
 cd fastapi-security-gateway
-```
 
-2. Create and activate a virtual environment:
-```bash
+# Create virtual environment
 python -m venv .venv
-source .venv/bin/activate  # For Linux/Mac
+source .venv/bin/activate  # Linux/Mac
 # OR
-.venv\Scripts\activate  # For Windows
+.venv\Scripts\activate     # Windows
+
+# Install dependencies
+pip install -r requirements.txt
 ```
 
-3. Install dependencies:
+2. **Configure**
+```bash
+# Copy example config
+cp config/security_policies.yaml.example config/security_policies.yaml
+
+# Set JWT secret
+export JWT_SECRET="your-secret-key"  # Linux/Mac
+# OR
+set JWT_SECRET="your-secret-key"     # Windows
+```
+
+3. **Run**
+```bash
+# Development mode
+python debug_fastapi.py
+
+# Production mode
+uvicorn main:app --host 127.0.0.1 --port 8000
+```
+
+4. **Test**
+```bash
+# Run test suite
+python test_fastapi.py
+
+# Or try minimal example
+python minimal.py
+```
+
+## 📚 Documentation
+
+Visit http://localhost:8000/docs after starting the server for interactive API documentation.
+
+### Core Components
+
+- `main.py` - Main application & API endpoints
+- `threat_detection/` - Anomaly detection system
+- `self_healing/` - Automatic mitigation strategies
+- `config/` - Security policies & configuration
+
+### Common Use Cases
+
+1. **API Protection**
+```python
+from fastapi import FastAPI, Depends
+from main import security_gateway
+
+app = FastAPI()
+
+@app.get("/api/protected")
+async def protected_endpoint(security=Depends(security_gateway)):
+    return {"message": "Protected data"}
+```
+
+2. **Custom Security Rules**
+```yaml
+# config/security_policies.yaml
+policies:
+  - name: rate_limit
+    rules:
+      - max_requests_per_minute: 1000
+        action: throttle
+```
+
+## 🤝 Contributing
+
+Contributions are welcome! Here's how you can help:
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Make your changes
+4. Run tests (`python test_fastapi.py`)
+5. Commit changes (`git commit -am 'Add amazing feature'`)
+6. Push to branch (`git push origin feature/amazing-feature`)
+7. Open a Pull Request
+
+### Development Setup
+
+1. Install development requirements:
 ```bash
 pip install -r requirements.txt
 ```
 
-4. Configure security policies:
-- Copy config/security_policies.yaml.example to config/security_policies.yaml
-- Update the settings according to your needs
-- Set up your JWT secret in the environment variable JWT_SECRET
-
-## Usage
-
-1. Start the server:
+2. Use the debug mode for development:
 ```bash
-# For development with debug mode:
 python debug_fastapi.py
-
-# For production:
-uvicorn main:app --host 127.0.0.1 --port 8000
 ```
 
-2. Access the dashboard:
-- Open http://localhost:8000/dashboard in your browser
-- View real-time metrics and security analytics
+3. Follow code style:
+- Use type hints
+- Add docstrings for functions
+- Keep code modular
+- Add tests for new features
 
-3. API Endpoints:
-- GET / - Basic system information
-- GET /health - Detailed health check
-- GET /metrics - System metrics and analytics
-- POST /api/* - Protected API endpoints with security features
-- GET /docs - Interactive API documentation
-- GET /settings - View current security settings
-- POST /settings - Update security settings
+## 📝 License
 
-## Testing
+This project is MIT licensed - see [LICENSE](LICENSE) for details.
 
-The project includes several test utilities:
+## ⭐ Support
 
-1. Basic API Tests:
-```bash
-python test_fastapi.py
-```
+Give a ⭐️ if this project helped you!
 
-2. Startup Tests:
-```bash
-python test_startup.py  # With all warnings
-python test_startup_no_warn.py  # Without warnings
-```
+## 🔗 Links
 
-3. Minimal Example:
-```bash
-python minimal.py  # Runs a minimal version of the API for testing
-```
-
-## Configuration
-
-The system is configured through security_policies.yaml with the following sections:
-
-1. **GraphQL Control**
-   - max_depth: Maximum query depth
-   - query_complexity: Maximum query complexity
-
-2. **Parameter Sanitization**
-   - Custom patterns and rules for request sanitization
-   - Field-specific sanitization rules
-
-3. **Behavioral Baseline**
-   - Machine learning parameters
-   - Anomaly detection thresholds
-   - Training window configuration
-
-4. **Self-Healing**
-   - Circuit breaker thresholds
-   - Rate limiting rules
-   - Schema validation settings
-
-## Development
-
-To extend or modify the system:
-
-1. Anomaly Detection:
-   - Modify threat_detection/anomaly_detection.py
-   - Update behavioral baselines in config/
-
-2. Self-Healing:
-   - Customize self_healing/controller.py
-   - Add new healing strategies
-
-3. API Endpoints:
-   - Add routes to main.py
-   - Implement new security features
-
-4. Testing:
-   - Add new test cases to test_fastapi.py
-   - Use debug_fastapi.py for development testing
-   - Create minimal examples in minimal.py
-
-## Production Deployment
-
-For production deployment:
-
-1. Security Considerations:
-   - Set proper rate limits
-   - Configure strict CORS settings
-   - Use secure JWT settings
-   - Enable HTTPS
-
-2. Performance Optimization:
-   - Adjust behavioral baseline parameters
-   - Fine-tune anomaly detection thresholds
-   - Configure appropriate resource limits
-
-3. Monitoring Setup:
-   - Configure logging
-   - Set up alerts
-   - Monitor system metrics
-
-## License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
+- [FastAPI Documentation](https://fastapi.tiangolo.com/)
+- [Security Best Practices](https://owasp.org/www-project-api-security/)
+- [Rate Limiting Explained](https://en.wikipedia.org/wiki/Rate_limiting)
