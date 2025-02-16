@@ -3,30 +3,53 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="API Security Gateway Admin Console - Monitor and manage your API security settings">
     <title>API Security Gateway - Admin Console</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
-            --primary: #0071e3;
-            --success: #34c759;
-            --warning: #ff9500;
-            --danger: #ff3b30;
-            --bg-light: #f5f5f7;
-            --bg-dark: #1d1d1f;
-            --text-light: #86868b;
+            --primary: #0066cc;
+            --primary-hover: #0052a3;
+            --success: #2e8540;
+            --warning: #cc7a00;
+            --danger: #d83933;
+            --bg-light: #f8f9fa;
+            --bg-dark: #1a1a1a;
+            --text-light: #4a4a4a;
+            --text-dark: #f8f9fa;
             --ease: cubic-bezier(0.28, 0.11, 0.32, 1);
             
-            --font-headline: -apple-system, BlinkMacSystemFont, sans-serif;
-            --font-body: -apple-system, BlinkMacSystemFont, sans-serif;
+            --font-headline: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            --font-body: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
             
-            --shadow-sm: 0 1px 3px rgba(0,0,0,0.1);
-            --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
-            --shadow-lg: 0 8px 24px rgba(0,0,0,0.06);
+            --shadow-sm: 0 2px 4px rgba(0,0,0,0.1);
+            --shadow-md: 0 4px 8px rgba(0,0,0,0.12);
+            --shadow-lg: 0 8px 16px rgba(0,0,0,0.12);
             
-            --radius-sm: 8px;
-            --radius-md: 12px;
-            --radius-lg: 18px;
+            --radius-sm: 6px;
+            --radius-md: 8px;
+            --radius-lg: 12px;
+
+            --focus-ring: 0 0 0 3px rgba(0, 102, 204, 0.4);
+        }
+
+        /* Skip Link */
+        .skip-link {
+            position: absolute;
+            top: -40px;
+            left: 0;
+            padding: 8px;
+            background: var(--primary);
+            color: white;
+            z-index: 1000;
+            transition: top 0.2s;
+        }
+
+        .skip-link:focus {
+            top: 0;
+            outline: none;
+            box-shadow: var(--focus-ring);
         }
 
         body {
@@ -36,73 +59,85 @@
             background: var(--bg-light);
             color: var(--text-light);
             transition: all 0.3s var(--ease);
-            line-height: 1.5;
+            line-height: 1.6;
             -webkit-font-smoothing: antialiased;
             scroll-behavior: smooth;
         }
 
         body.dark {
             background: var(--bg-dark);
-            color: #f1f5f9;
+            color: var(--text-dark);
         }
 
         .layout {
             display: grid;
-            grid-template-columns: 240px 1fr;
+            grid-template-columns: 280px 1fr;
             min-height: 100vh;
         }
 
         .sidebar {
-            background: rgba(255, 255, 255, 0.8);
+            background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(10px);
             padding: 2rem 1.5rem;
             position: fixed;
             width: 280px;
             height: 100vh;
             overflow-y: auto;
-            border-right: 1px solid rgba(0, 0, 0, 0.05);
+            border-right: 1px solid rgba(0, 0, 0, 0.1);
             transition: all 0.3s var(--ease);
         }
 
         .dark .sidebar {
-            background: #1f2937;
-            border-color: #374151;
+            background: rgba(26, 26, 26, 0.95);
+            border-color: rgba(255, 255, 255, 0.1);
         }
 
         .main-content {
-            margin-left: 240px;
+            margin-left: 280px;
             padding: 2rem;
+            min-height: 100vh;
         }
 
         .grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
             gap: 1.5rem;
             margin-bottom: 2rem;
         }
 
         .card {
             background: white;
-            border-radius: 0.5rem;
+            border-radius: var(--radius-md);
             padding: 1.5rem;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            box-shadow: var(--shadow-sm);
+            transition: box-shadow 0.3s var(--ease);
+        }
+
+        .card:hover {
+            box-shadow: var(--shadow-md);
         }
 
         .dark .card {
-            background: #1f2937;
+            background: rgba(255, 255, 255, 0.05);
         }
 
         .card-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .card h2 {
+            margin: 0;
+            font-size: 1.25rem;
+            color: inherit;
         }
 
         .nav {
             list-style: none;
             padding: 0;
-            margin: 0;
+            margin: 2rem 0;
         }
 
         .nav-item {
@@ -114,14 +149,19 @@
             align-items: center;
             gap: 0.75rem;
             padding: 0.75rem;
-            border-radius: 0.375rem;
+            border-radius: var(--radius-sm);
             color: var(--text-light);
             text-decoration: none;
             transition: all 0.2s;
         }
 
         .nav-link:hover {
-            background: #f1f5f9;
+            background: rgba(0, 0, 0, 0.05);
+        }
+
+        .nav-link:focus {
+            outline: none;
+            box-shadow: var(--focus-ring);
         }
 
         .nav-link.active {
@@ -129,19 +169,36 @@
             color: white;
         }
 
+        .dark .nav-link {
+            color: var(--text-dark);
+        }
+
         .dark .nav-link:hover {
-            background: #374151;
+            background: rgba(255, 255, 255, 0.1);
         }
 
         .button {
-            padding: 0.5rem 1rem;
-            border-radius: 0.375rem;
+            padding: 0.625rem 1rem;
+            border-radius: var(--radius-sm);
             border: none;
             font-size: 0.875rem;
+            font-weight: 500;
             cursor: pointer;
-            display: flex;
+            display: inline-flex;
             align-items: center;
             gap: 0.5rem;
+            transition: all 0.2s;
+            position: relative;
+        }
+
+        .button:focus {
+            outline: none;
+            box-shadow: var(--focus-ring);
+        }
+
+        .button[disabled] {
+            opacity: 0.6;
+            cursor: not-allowed;
         }
 
         .button-primary {
@@ -149,12 +206,47 @@
             color: white;
         }
 
+        .button-primary:hover:not([disabled]) {
+            background: var(--primary-hover);
+        }
+
+        .button .loading-spinner {
+            display: none;
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 0.8s linear infinite;
+            position: absolute;
+            left: 50%;
+            margin-left: -8px;
+        }
+
+        .button.loading {
+            color: transparent;
+        }
+
+        .button.loading .loading-spinner {
+            display: block;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
         .view {
             display: none;
+            animation: fadeIn 0.3s ease;
         }
 
         .view.active {
             display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
         }
 
         .form-group {
@@ -164,43 +256,59 @@
         .form-group label {
             display: block;
             margin-bottom: 0.5rem;
-            color: var(--text-light);
+            color: inherit;
             font-size: 0.875rem;
+            font-weight: 500;
         }
 
         .form-group input,
         .form-group select {
             width: 100%;
-            padding: 0.5rem;
-            border: 1px solid #e2e8f0;
-            border-radius: 0.375rem;
+            padding: 0.625rem;
+            border: 1px solid rgba(0,0,0,0.1);
+            border-radius: var(--radius-sm);
             font-size: 0.875rem;
             background: white;
+            transition: all 0.2s;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: var(--focus-ring);
         }
 
         .dark .form-group input,
         .dark .form-group select {
-            background: #374151;
-            border-color: #4b5563;
-            color: #e2e8f0;
+            background: rgba(255, 255, 255, 0.05);
+            border-color: rgba(255, 255, 255, 0.1);
+            color: var(--text-dark);
         }
 
         .logs {
             height: 300px;
             overflow-y: auto;
-            font-family: monospace;
+            font-family: ui-monospace, 'Cascadia Code', 'Source Code Pro', monospace;
             font-size: 0.875rem;
+            background: rgba(0,0,0,0.02);
+            border-radius: var(--radius-sm);
+            padding: 0.5rem;
+        }
+
+        .dark .logs {
+            background: rgba(255,255,255,0.05);
         }
 
         .log-entry {
             padding: 0.5rem;
-            border-bottom: 1px solid #e2e8f0;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
             display: flex;
             justify-content: space-between;
         }
 
         .dark .log-entry {
-            border-color: #4b5563;
+            border-color: rgba(255,255,255,0.1);
         }
 
         .metrics {
@@ -210,42 +318,54 @@
 
         .metric {
             padding: 1rem;
-            background: #f8fafc;
-            border-radius: 0.375rem;
+            background: rgba(0,0,0,0.02);
+            border-radius: var(--radius-sm);
             display: flex;
             justify-content: space-between;
             align-items: center;
+            transition: background-color 0.2s;
+        }
+
+        .metric:hover {
+            background: rgba(0,0,0,0.04);
         }
 
         .dark .metric {
-            background: #374151;
+            background: rgba(255,255,255,0.05);
+        }
+
+        .dark .metric:hover {
+            background: rgba(255,255,255,0.08);
         }
 
         .chart-container {
             position: relative;
             height: 200px;
-            margin-top: 1rem;
+            margin-top: 1.5rem;
         }
 
         .alert {
-            padding: 0.75rem 1rem;
-            border-radius: 0.375rem;
+            padding: 1rem;
+            border-radius: var(--radius-sm);
             margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
             animation: slideIn 0.3s ease;
         }
 
         .alert-success {
-            background: #dcfce7;
-            color: #166534;
+            background: #e6f4ea;
+            color: var(--success);
         }
 
         .alert-error {
-            background: #fee2e2;
-            color: #991b1b;
+            background: #fce8e6;
+            color: var(--danger);
         }
 
         @keyframes slideIn {
-            from { transform: translateY(-10px); opacity: 0; }
+            from { transform: translateY(-1rem); opacity: 0; }
             to { transform: translateY(0); opacity: 1; }
         }
 
@@ -253,72 +373,140 @@
             .layout {
                 grid-template-columns: 1fr;
             }
+
             .sidebar {
-                display: none;
+                position: fixed;
+                left: -100%;
+                z-index: 1000;
+                width: 100%;
+                max-width: 280px;
+                transition: left 0.3s var(--ease);
             }
+
+            .sidebar.active {
+                left: 0;
+            }
+
             .main-content {
                 margin-left: 0;
+                padding: 1rem;
             }
+
+            .header {
+                position: sticky;
+                top: 0;
+                z-index: 900;
+                background: var(--bg-light);
+                padding: 1rem;
+                margin: -1rem -1rem 1rem;
+                border-bottom: 1px solid rgba(0,0,0,0.1);
+            }
+
+            .dark .header {
+                background: var(--bg-dark);
+                border-color: rgba(255,255,255,0.1);
+            }
+
+            .mobile-menu-toggle {
+                display: block;
+            }
+        }
+
+        @media (min-width: 769px) {
+            .mobile-menu-toggle {
+                display: none;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *,
+            *::before,
+            *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+                scroll-behavior: auto !important;
+            }
+        }
+
+        .visually-hidden {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
         }
     </style>
 </head>
 <body>
+    <a href="#main-content" class="skip-link">Skip to main content</a>
     <div class="layout">
-        <aside class="sidebar">
+        <aside class="sidebar" role="navigation" aria-label="Main navigation">
             <h1>Security Gateway</h1>
+            <button class="button mobile-menu-toggle" aria-label="Toggle menu" onclick="toggleMobileMenu()">
+                <i class="fas fa-bars"></i>
+            </button>
             <nav>
                 <ul class="nav">
-                    <li><a href="#dashboard" class="nav-link active" onclick="switchView('dashboard')">
-                        <i class="fas fa-tachometer-alt"></i> Dashboard
+                    <li><a href="#dashboard" class="nav-link active" onclick="switchView('dashboard')" aria-current="page">
+                        <i class="fas fa-tachometer-alt" aria-hidden="true"></i> Dashboard
                     </a></li>
                     <li><a href="#analytics" class="nav-link" onclick="switchView('analytics')">
-                        <i class="fas fa-chart-line"></i> Analytics
+                        <i class="fas fa-chart-line" aria-hidden="true"></i> Analytics
                     </a></li>
                     <li><a href="#security" class="nav-link" onclick="switchView('security')">
-                        <i class="fas fa-shield-alt"></i> Security
+                        <i class="fas fa-shield-alt" aria-hidden="true"></i> Security
                     </a></li>
                     <li><a href="#logs" class="nav-link" onclick="switchView('logs')">
-                        <i class="fas fa-list"></i> Logs
+                        <i class="fas fa-list" aria-hidden="true"></i> Logs
                     </a></li>
                     <li><a href="#settings" class="nav-link" onclick="switchView('settings')">
-                        <i class="fas fa-cog"></i> Settings
+                        <i class="fas fa-cog" aria-hidden="true"></i> Settings
                     </a></li>
                 </ul>
             </nav>
         </aside>
 
-        <main class="main-content">
+        <main class="main-content" id="main-content" role="main">
             <header class="header">
                 <div class="header-controls">
-                    <button class="button button-primary" onclick="refreshData()">
-                        <i class="fas fa-sync"></i> Refresh
+                    <button class="button button-primary" onclick="refreshData()" aria-label="Refresh data">
+                        <i class="fas fa-sync" aria-hidden="true"></i>
+                        <span>Refresh</span>
+                        <div class="loading-spinner" role="status" aria-hidden="true"></div>
                     </button>
-                    <button class="button button-primary" onclick="toggleTheme()">
-                        <i class="fas fa-moon"></i> Theme
+                    <button class="button button-primary" onclick="toggleTheme()" aria-label="Toggle dark mode">
+                        <i class="fas fa-moon" aria-hidden="true"></i>
+                        <span>Theme</span>
                     </button>
                 </div>
             </header>
 
             <!-- Dashboard View -->
-            <div id="dashboard-view" class="view active">
+            <div id="dashboard-view" class="view active" role="tabpanel" aria-labelledby="dashboard-tab">
                 <div class="grid">
                     <div class="card">
                         <div class="card-header">
                             <h2>Gateway Status</h2>
-                            <div class="status healthy">
-                                <i class="fas fa-check-circle"></i> Healthy
+                            <div class="status healthy" role="status">
+                                <i class="fas fa-check-circle" aria-hidden="true"></i>
+                                <span>Healthy</span>
                             </div>
                         </div>
-                        <div class="metrics" id="gateway-metrics"></div>
+                        <div class="metrics" id="gateway-metrics" aria-label="Gateway metrics"></div>
                     </div>
 
                     <div class="card">
                         <div class="card-header">
                             <h2>System Resources</h2>
                         </div>
-                        <div class="metrics" id="system-metrics"></div>
+                        <div class="metrics" id="system-metrics" aria-label="System resource metrics"></div>
                         <div class="chart-container">
-                            <canvas id="resourceChart"></canvas>
+                            <canvas id="resourceChart" aria-label="Resource usage chart"></canvas>
                         </div>
                     </div>
 
@@ -326,7 +514,7 @@
                         <div class="card-header">
                             <h2>Security Events</h2>
                         </div>
-                        <div class="logs" id="security-logs"></div>
+                        <div class="logs" id="security-logs" role="log" aria-label="Security events log"></div>
                     </div>
 
                     <div class="card">
@@ -334,43 +522,44 @@
                             <h2>Traffic Analytics</h2>
                         </div>
                         <div class="chart-container">
-                            <canvas id="trafficChart"></canvas>
+                            <canvas id="trafficChart" aria-label="Traffic analytics chart"></canvas>
                         </div>
                     </div>
                 </div>
             </div>
 
             <!-- Analytics View -->
-            <div id="analytics-view" class="view">
+            <div id="analytics-view" class="view" role="tabpanel" aria-labelledby="analytics-tab">
                 <div class="grid">
                     <div class="card">
                         <div class="card-header">
                             <h2>Traffic Analysis</h2>
                         </div>
-                        <div id="traffic-analytics"></div>
+                        <div id="traffic-analytics" aria-live="polite"></div>
                     </div>
                 </div>
             </div>
 
             <!-- Security View -->
-            <div id="security-view" class="view">
+            <div id="security-view" class="view" role="tabpanel" aria-labelledby="security-tab">
                 <div class="grid">
                     <div class="card">
                         <div class="card-header">
                             <h2>Threat Detection</h2>
                         </div>
-                        <div id="threat-metrics"></div>
+                        <div id="threat-metrics" aria-live="polite"></div>
                     </div>
                 </div>
             </div>
 
             <!-- Logs View -->
-            <div id="logs-view" class="view">
+            <div id="logs-view" class="view" role="tabpanel" aria-labelledby="logs-tab">
                 <div class="card">
                     <div class="card-header">
                         <h2>System Logs</h2>
                         <div class="controls">
-                            <select id="log-level" onchange="filterLogs()">
+                            <label for="log-level" class="visually-hidden">Filter logs by level</label>
+                            <select id="log-level" onchange="filterLogs()" aria-label="Filter logs by level">
                                 <option value="all">All Levels</option>
                                 <option value="error">Errors</option>
                                 <option value="warning">Warnings</option>
@@ -378,39 +567,46 @@
                             </select>
                         </div>
                     </div>
-                    <div class="logs" id="system-logs"></div>
+                    <div class="logs" id="system-logs" role="log" aria-label="System logs"></div>
                 </div>
             </div>
 
             <!-- Settings View -->
-            <div id="settings-view" class="view">
+            <div id="settings-view" class="view" role="tabpanel" aria-labelledby="settings-tab">
                 <div class="card">
                     <div class="card-header">
                         <h2>Gateway Configuration</h2>
                     </div>
                     <div id="settings-form">
-                        <form onsubmit="saveSettings(event)">
+                        <form onsubmit="saveSettings(event)" aria-label="Gateway settings">
                             <div class="form-group">
-                                <label>Rate Limit (requests/minute)</label>
-                                <input type="number" id="rate-limit" name="rate_limit" min="1" max="1000">
+                                <label for="rate-limit">Rate Limit (requests/minute)</label>
+                                <input type="number" id="rate-limit" name="rate_limit" min="1" max="1000"
+                                    aria-describedby="rate-limit-help">
+                                <small id="rate-limit-help" class="help-text">Set maximum requests per minute (1-1000)</small>
                             </div>
                             <div class="form-group">
-                                <label>Max Request Size</label>
-                                <select id="max-size" name="max_size">
+                                <label for="max-size">Max Request Size</label>
+                                <select id="max-size" name="max_size" aria-describedby="max-size-help">
                                     <option value="1MB">1 MB</option>
                                     <option value="5MB">5 MB</option>
                                     <option value="10MB">10 MB</option>
                                 </select>
+                                <small id="max-size-help" class="help-text">Maximum allowed request payload size</small>
                             </div>
                             <div class="form-group">
-                                <label>Security Mode</label>
-                                <select id="security-mode" name="security_mode">
+                                <label for="security-mode">Security Mode</label>
+                                <select id="security-mode" name="security_mode" aria-describedby="security-mode-help">
                                     <option value="enforced">Enforced</option>
                                     <option value="monitoring">Monitoring Only</option>
                                     <option value="disabled">Disabled</option>
                                 </select>
+                                <small id="security-mode-help" class="help-text">Select security policy enforcement level</small>
                             </div>
-                            <button type="submit" class="button button-primary">Save Settings</button>
+                            <button type="submit" class="button button-primary">
+                                Save Settings
+                                <div class="loading-spinner" role="status" aria-hidden="true"></div>
+                            </button>
                         </form>
                     </div>
                 </div>
@@ -424,6 +620,49 @@
         let resourceChart = null;
 
         function initCharts() {
+            const config = {
+                responsive: true,
+                maintainAspectRatio: false,
+                animation: {
+                    duration: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 1000
+                },
+                plugins: {
+                    legend: {
+                        labels: {
+                            color: darkMode ? '#f8f9fa' : '#4a4a4a',
+                            font: {
+                                family: 'system-ui, -apple-system, sans-serif'
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            color: darkMode ? '#f8f9fa' : '#4a4a4a',
+                            font: {
+                                family: 'system-ui, -apple-system, sans-serif'
+                            }
+                        },
+                        grid: {
+                            color: darkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'
+                        }
+                    },
+                    x: {
+                        ticks: {
+                            color: darkMode ? '#f8f9fa' : '#4a4a4a',
+                            font: {
+                                family: 'system-ui, -apple-system, sans-serif'
+                            }
+                        },
+                        grid: {
+                            color: darkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'
+                        }
+                    }
+                }
+            };
+
             // Traffic Chart
             const trafficCtx = document.getElementById('trafficChart').getContext('2d');
             trafficChart = new Chart(trafficCtx, {
@@ -433,16 +672,12 @@
                     datasets: [{
                         label: 'Requests/sec',
                         data: Array(10).fill(0),
-                        borderColor: '#2563eb',
+                        borderColor: '#0066cc',
                         tension: 0.4,
                         fill: false
                     }]
                 },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    animation: false
-                }
+                options: config
             });
 
             // Resource Chart
@@ -454,46 +689,85 @@
                     datasets: [{
                         label: 'CPU Usage',
                         data: Array(10).fill(0),
-                        borderColor: '#22c55e',
+                        borderColor: '#2e8540',
                         tension: 0.4,
                         fill: false
                     }, {
                         label: 'Memory Usage',
                         data: Array(10).fill(0),
-                        borderColor: '#f59e0b',
+                        borderColor: '#cc7a00',
                         tension: 0.4,
                         fill: false
                     }]
                 },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    animation: false
-                }
+                options: config
             });
         }
 
         function toggleTheme() {
             darkMode = !darkMode;
             document.body.classList.toggle('dark');
+            const icon = document.querySelector('button[aria-label="Toggle dark mode"] i');
+            icon.className = darkMode ? 'fas fa-sun' : 'fas fa-moon';
+            updateChartsTheme();
+        }
+
+        function updateChartsTheme() {
+            const textColor = darkMode ? '#f8f9fa' : '#4a4a4a';
+            const gridColor = darkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
+
+            [trafficChart, resourceChart].forEach(chart => {
+                if (!chart) return;
+                
+                chart.options.plugins.legend.labels.color = textColor;
+                chart.options.scales.x.ticks.color = textColor;
+                chart.options.scales.y.ticks.color = textColor;
+                chart.options.scales.x.grid.color = gridColor;
+                chart.options.scales.y.grid.color = gridColor;
+                chart.update();
+            });
+        }
+
+        function toggleMobileMenu() {
+            const sidebar = document.querySelector('.sidebar');
+            const isExpanded = sidebar.classList.contains('active');
+            sidebar.classList.toggle('active');
+            document.querySelector('.mobile-menu-toggle').setAttribute('aria-expanded', !isExpanded);
         }
 
         function switchView(viewName) {
             document.querySelectorAll('.view').forEach(view => {
                 view.classList.remove('active');
+                view.setAttribute('aria-hidden', 'true');
             });
             
-            document.getElementById(`${viewName}-view`).classList.add('active');
+            const newView = document.getElementById(`${viewName}-view`);
+            newView.classList.add('active');
+            newView.setAttribute('aria-hidden', 'false');
             
             document.querySelectorAll('.nav-link').forEach(link => {
                 link.classList.remove('active');
+                link.setAttribute('aria-current', 'false');
             });
-            document.querySelector(`[href="#${viewName}"]`).classList.add('active');
+            
+            const activeLink = document.querySelector(`[href="#${viewName}"]`);
+            activeLink.classList.add('active');
+            activeLink.setAttribute('aria-current', 'page');
+
+            // Update page title
+            document.title = `${viewName.charAt(0).toUpperCase() + viewName.slice(1)} - API Security Gateway`;
+
+            // Close mobile menu when switching views
+            document.querySelector('.sidebar').classList.remove('active');
+            document.querySelector('.mobile-menu-toggle').setAttribute('aria-expanded', 'false');
 
             loadViewData(viewName);
         }
 
         async function loadViewData(viewName) {
+            const view = document.getElementById(`${viewName}-view`);
+            view.setAttribute('aria-busy', 'true');
+            
             try {
                 switch(viewName) {
                     case 'analytics':
@@ -518,10 +792,16 @@
             } catch (error) {
                 console.error(`Error loading ${viewName} data:`, error);
                 showAlert(`Error loading ${viewName} data`, 'error');
+            } finally {
+                view.setAttribute('aria-busy', 'false');
             }
         }
 
         async function updateMetrics() {
+            const refreshBtn = document.querySelector('button[aria-label="Refresh data"]');
+            refreshBtn.disabled = true;
+            refreshBtn.classList.add('loading');
+
             try {
                 const [healthResponse, rootResponse] = await Promise.all([
                     fetch('/health'),
@@ -532,30 +812,30 @@
                 const rootData = await rootResponse.json();
                 
                 document.getElementById('gateway-metrics').innerHTML = `
-                    <div class="metric">
+                    <div class="metric" role="status">
                         <span class="metric-label">
-                            <i class="fas fa-clock"></i> Uptime
+                            <i class="fas fa-clock" aria-hidden="true"></i> Uptime
                         </span>
                         <span class="metric-value">${Math.floor(healthData.system_info.uptime / 3600)}h</span>
                     </div>
-                    <div class="metric">
+                    <div class="metric" role="status">
                         <span class="metric-label">
-                            <i class="fas fa-shield-alt"></i> Security Mode
+                            <i class="fas fa-shield-alt" aria-hidden="true"></i> Security Mode
                         </span>
                         <span class="metric-value">${healthData.security_mode}</span>
                     </div>
                 `;
 
                 document.getElementById('system-metrics').innerHTML = `
-                    <div class="metric">
+                    <div class="metric" role="status">
                         <span class="metric-label">
-                            <i class="fas fa-microchip"></i> CPU Usage
+                            <i class="fas fa-microchip" aria-hidden="true"></i> CPU Usage
                         </span>
                         <span class="metric-value">${healthData.system_info.cpu_usage}%</span>
                     </div>
-                    <div class="metric">
+                    <div class="metric" role="status">
                         <span class="metric-label">
-                            <i class="fas fa-memory"></i> Memory Usage
+                            <i class="fas fa-memory" aria-hidden="true"></i> Memory Usage
                         </span>
                         <span class="metric-value">${healthData.system_info.memory_usage}%</span>
                     </div>
@@ -565,13 +845,19 @@
             } catch (error) {
                 console.error('Error fetching metrics:', error);
                 showAlert('Error updating metrics', 'error');
+            } finally {
+                refreshBtn.disabled = false;
+                refreshBtn.classList.remove('loading');
             }
         }
 
         function updateCharts(healthData) {
+            if (!trafficChart || !resourceChart) return;
+
+            // Smooth data updates
             trafficChart.data.datasets[0].data.shift();
             trafficChart.data.datasets[0].data.push(Math.random() * 100);
-            trafficChart.update();
+            trafficChart.update('none');  // Disable animation for smoother updates
 
             resourceChart.data.datasets[0].data.shift();
             resourceChart.data.datasets[0].data.push(healthData.system_info.cpu_usage);
@@ -579,66 +865,132 @@
             resourceChart.data.datasets[1].data.shift();
             resourceChart.data.datasets[1].data.push(healthData.system_info.memory_usage);
             
-            resourceChart.update();
+            resourceChart.update('none');  // Disable animation for smoother updates
         }
 
         async function saveSettings(event) {
             event.preventDefault();
-            const formData = new FormData(event.target);
-            const settings = Object.fromEntries(formData);
+            const form = event.target;
+            const submitBtn = form.querySelector('button[type="submit"]');
+            
+            submitBtn.disabled = true;
+            submitBtn.classList.add('loading');
             
             try {
+                const formData = new FormData(form);
+                const settings = Object.fromEntries(formData);
+                
                 const response = await fetch('/settings', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(settings)
                 });
                 
-                showAlert(response.ok ? 'Settings saved successfully' : 'Error saving settings',
-                         response.ok ? 'success' : 'error');
+                if (!response.ok) {
+                    throw new Error('Failed to save settings');
+                }
+                
+                showAlert('Settings saved successfully', 'success');
             } catch (error) {
+                console.error('Error saving settings:', error);
                 showAlert('Error saving settings', 'error');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.classList.remove('loading');
             }
         }
 
         function showAlert(message, type = 'success') {
             const alert = document.createElement('div');
             alert.className = `alert alert-${type}`;
-            alert.textContent = message;
+            alert.setAttribute('role', 'alert');
             
-            document.querySelector('.main-content').insertBefore(
-                alert,
-                document.querySelector('.main-content').firstChild
-            );
+            const icon = document.createElement('i');
+            icon.className = type === 'success' ? 'fas fa-check-circle' : 'fas fa-exclamation-circle';
+            icon.setAttribute('aria-hidden', 'true');
+            
+            const text = document.createElement('span');
+            text.textContent = message;
+            
+            alert.appendChild(icon);
+            alert.appendChild(text);
+            
+            const mainContent = document.querySelector('.main-content');
+            mainContent.insertBefore(alert, mainContent.firstChild);
+            
+            // Announce alert for screen readers
+            const liveRegion = document.createElement('div');
+            liveRegion.setAttribute('role', 'status');
+            liveRegion.setAttribute('aria-live', 'polite');
+            liveRegion.className = 'visually-hidden';
+            liveRegion.textContent = `${type === 'success' ? 'Success' : 'Error'}: ${message}`;
+            document.body.appendChild(liveRegion);
 
-            setTimeout(() => alert.remove(), 3000);
-        }
-
-        async function refreshData() {
-            const refreshBtn = document.querySelector('.button i.fa-sync');
-            refreshBtn.style.transform = 'rotate(360deg)';
-            await updateMetrics();
             setTimeout(() => {
-                refreshBtn.style.transform = 'rotate(0deg)';
-            }, 500);
+                alert.remove();
+                liveRegion.remove();
+            }, 5000);
         }
 
         // Initialize the dashboard
         document.addEventListener('DOMContentLoaded', () => {
+            // Check for system dark mode preference
+            if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                toggleTheme();
+            }
+
             initCharts();
             updateMetrics();
-            setInterval(updateMetrics, 5000);
+            
+            // Set up polling interval if not using reduced motion
+            if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                setInterval(updateMetrics, 5000);
+            }
             
             const initialView = window.location.hash.slice(1) || 'dashboard';
             switchView(initialView);
 
+            // Event Listeners
             window.addEventListener('hashchange', () => {
                 const newView = window.location.hash.slice(1);
                 switchView(newView);
             });
             
-            document.querySelector('.button i.fa-sync').style.transition = 'transform 0.5s ease';
+            window.addEventListener('keydown', (event) => {
+                if (event.key === 'Escape' && document.querySelector('.sidebar.active')) {
+                    toggleMobileMenu();
+                }
+            });
+            
+            // Mobile menu setup
+            const mobileMenuBtn = document.querySelector('.mobile-menu-toggle');
+            mobileMenuBtn.setAttribute('aria-expanded', 'false');
+            
+            // Handle clicks outside mobile menu
+            document.addEventListener('click', (event) => {
+                const sidebar = document.querySelector('.sidebar');
+                const mobileMenuBtn = document.querySelector('.mobile-menu-toggle');
+                
+                if (sidebar.classList.contains('active') &&
+                    !sidebar.contains(event.target) &&
+                    !mobileMenuBtn.contains(event.target)) {
+                    toggleMobileMenu();
+                }
+            });
         });
+
+        // Handle service worker if needed
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js').catch(error => {
+                    console.error('Service worker registration failed:', error);
+                });
+            });
+        }
     </script>
 </body>
 </html>
+                showAlert('Error updating metrics', 'error');
+            } finally {
+                refreshBtn.disabled = false;
+                refreshBtn.classList.remove('loading');

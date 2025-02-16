@@ -22,4 +22,4 @@ var/
 jwt_secret.txt
 .idea/
 .vscode/
-venv/
+venv/.venv/

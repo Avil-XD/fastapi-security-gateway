@@ -1,3 +1,4 @@
+from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request, Response
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
@@ -11,17 +12,62 @@ import psutil
 import datetime
 from pathlib import Path
 
-app = FastAPI(title="API Security Gateway")
-
 # Global variables
 security_policies = {}
 policy_loader = None
 self_healing_controller = None
 api_analyzer = None
+STARTUP_TIME = time.time()
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup
+    print("Starting initialization...")
+    try:
+        global security_policies, policy_loader, self_healing_controller, api_analyzer
+        
+        # Define PolicyLoader class
+        class PolicyLoader:
+            def __init__(self, policies):
+                self.policies = policies
+            
+            def get_policies(self, section):
+                return self.policies.get(section, {})
+
+        print("Importing custom modules...")
+        from self_healing.controller import SelfHealingController
+        from threat_detection.anomaly_detection import APIAnalyzer
+
+        print("Loading security policies...")
+        config_path = Path("config/security_policies.yaml")
+        print(f"Config path exists: {config_path.exists()}")
+        with open(config_path, "r") as f:
+            security_policies = yaml.safe_load(f)
+        print("Security policies loaded successfully")
+
+        print("Initializing components...")
+        policy_loader = PolicyLoader(security_policies)
+        self_healing_controller = SelfHealingController(policy_loader)
+        api_analyzer = APIAnalyzer()
+        print("All components initialized successfully")
+
+    except Exception as e:
+        print(f"Startup error: {str(e)}")
+        raise
+    
+    yield  # Server is running
+    
+    # Shutdown
+    print("Shutting down...")
+
+# Create FastAPI app with lifespan
+app = FastAPI(
+    title="API Security Gateway",
+    lifespan=lifespan
+)
 
 # Security Configuration
 security = HTTPBasic()
-STARTUP_TIME = time.time()
 
 # Middleware Configuration
 app.add_middleware(
@@ -34,54 +80,6 @@ app.add_middleware(
 
 # Static files
 app.mount("/static", StaticFiles(directory="static"), name="static")
-
-# Global variables
-security_policies = {}
-policy_loader = None
-self_healing_controller = None
-api_analyzer = None
-
-@app.on_event("startup")
-async def startup_event():
-    """Initialize components on startup"""
-    global security_policies, policy_loader, self_healing_controller, api_analyzer
-    try:
-        # Define PolicyLoader class
-        class PolicyLoader:
-            def __init__(self, policies):
-                self.policies = policies
-            
-            def get_policies(self, section):
-                return self.policies.get(section, {})
-
-        # Import custom modules
-        from self_healing.controller import SelfHealingController
-        from threat_detection.anomaly_detection import APIAnalyzer
-
-        print("Loading security policies...")
-        # Load security policies
-        with open("config/security_policies.yaml", "r") as f:
-            security_policies = yaml.safe_load(f)
-        
-        print("Initializing components...")
-        # Initialize components
-        policy_loader = PolicyLoader(security_policies)
-        self_healing_controller = SelfHealingController(policy_loader)
-        api_analyzer = APIAnalyzer()
-        print("Startup completed successfully")
-
-    except FileNotFoundError as e:
-        print(f"Error: Could not find security policies file - {e}")
-        raise
-    except yaml.YAMLError as e:
-        print(f"Error: Invalid YAML in security policies - {e}")
-        raise
-    except ImportError as e:
-        print(f"Error: Failed to import required modules - {e}")
-        raise
-    except Exception as e:
-        print(f"Unexpected error during startup: {e}")
-        raise
 
 @app.get("/")
 async def root():
@@ -248,6 +246,7 @@ async def security_middleware(request: Request, call_next):
         return response
 
     except Exception as e:
+        print(f"Middleware error: {str(e)}")
         return JSONResponse(
             status_code=500,
             content={"detail": "Internal server error"}

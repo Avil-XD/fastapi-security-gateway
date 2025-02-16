@@ -1,8 +1,15 @@
-import numpy as np
-from sklearn.ensemble import IsolationForest
+import warnings
 from datetime import datetime
 
+# Suppress numpy warnings
+warnings.filterwarnings('ignore', category=RuntimeWarning)
+warnings.filterwarnings('ignore', category=UserWarning)
+
+import numpy as np
+from sklearn.ensemble import IsolationForest
+
 class APIAnalyzer:
+    """Analyzer for detecting API request anomalies using machine learning"""
     def __init__(self, policy_path='config/security_policies.yaml'):
         self.models = {}
         self.policy_path = policy_path
