@@ -5,15 +5,15 @@ policies:
   - name: graphql_depth_control
     description: Prevent nested query attacks
     rules:
-      - max_depth: 6
+      - max_depth: 5  # More restrictive for production
         action: reject
-      - query_complexity: 1000
+      - query_complexity: 500  # More restrictive
         action: throttle
 
   - name: parameter_sanitization
     description: Prevent injection attacks
     rules:
-      - pattern: '[;\\]'
+      - pattern: '[;\\<>]'  # Added < and > for better security
         fields: [query, body]
         action: sanitize
 
@@ -24,65 +24,65 @@ policies:
       - parameter_variation
       - response_size
     training_window: 14d
-    max_parameters: 100  # Maximum number of parameters allowed in a request
-    max_requests_per_minute: 1000  # Maximum requests per minute before considering anomalous
+    max_parameters: 50  # More restrictive
+    max_requests_per_minute: 500  # More restrictive
     anomaly_thresholds:
-      request_frequency: 0.95  # 95th percentile threshold
-      parameter_variation: 0.90  # 90th percentile threshold
-      response_size: 0.95  # 95th percentile threshold
-    alert_on_anomaly: true  # Enable alerting
-    self_healing_enabled: true  # Enable automatic mitigation
+      request_frequency: 0.95
+      parameter_variation: 0.90
+      response_size: 0.95
+    alert_on_anomaly: true
+    self_healing_enabled: true
 
   - name: self_healing
     actions:
       - type: circuit_breaker
-        threshold: 500ms  # Response time threshold
-        reset_time: 30s  # Time to wait before resetting circuit breaker
+        threshold: 500ms
+        reset_time: 30s
       - type: rate_limit
-        requests_per_minute: 1000
-        burst_capacity: 50
+        requests_per_minute: 500  # More restrictive
+        burst_capacity: 30  # More restrictive
       - type: schema_validation
         strict: true
-        max_depth: 10
+        max_depth: 8  # More restrictive
 
   - name: rate_limit
     description: Global API rate limiting
     rules:
-      - max_requests_per_minute: 1000
+      - max_requests_per_minute: 500  # More restrictive
         action: throttle
-      - burst_capacity: 50
+      - burst_capacity: 30  # More restrictive
         action: reject
 
   - name: jwt_validation
     description: Validate JWT tokens
     rules:
-      - required_claims: ["sub", "iss", "exp"]
-        algorithms: ["RS256"]
-        clock_skew: 30  # seconds
+      - required_claims: ["sub", "iss", "exp", "iat"]  # Added iat for better security
+        algorithms: ["RS256"]  # Using RSA for better security
+        clock_skew: 30
         issuer: "fastapi-security-gateway"
         audience: "protected-api"
 
 jwt:
-  secret_env: JWT_SECRET
+  secret_env: JWT_SECRET  # Set this in your environment
   refresh_window: 300  # 5 minutes before expiry
-  token_expiry: 3600  # 1 hour
+  token_expiry: 1800  # 30 minutes (more restrictive)
 
 # Monitoring and alerting settings
 monitoring:
   log_level: INFO
   metrics_enabled: true
-  alert_threshold: 80  # CPU/Memory threshold for alerts
+  alert_threshold: 75  # More sensitive threshold
   alert_channels:
     - type: email
       enabled: false
-      recipients: ["admin@yourdomain.com"]
+      recipients: []  # Configure in production
     - type: slack
       enabled: false
-      webhook_url: "https://hooks.slack.com/services/your/webhook/url"
+      webhook_url: ""  # Configure in production
 
-# CORS settings
+# CORS settings for production
 cors:
-  allowed_origins: ["http://localhost:3000", "https://yourdomain.com"]
+  allowed_origins: []  # Configure in production
   allowed_methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
   allowed_headers: ["Authorization", "Content-Type"]
   expose_headers: ["X-Rate-Limit"]

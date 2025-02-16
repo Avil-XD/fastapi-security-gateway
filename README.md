@@ -43,7 +43,7 @@ pip install -r requirements.txt
 # Copy example config
 cp config/security_policies.yaml.example config/security_policies.yaml
 
-# Set JWT secret
+# Set JWT secret (use a strong, random value in production)
 export JWT_SECRET="your-secret-key"  # Linux/Mac
 # OR
 set JWT_SECRET="your-secret-key"     # Windows
@@ -102,6 +102,39 @@ policies:
         action: throttle
 ```
 
+## 🛡️ Security Best Practices
+
+### Production Deployment
+
+1. **Environment Setup**
+   - Use HTTPS only in production
+   - Set secure CORS policies
+   - Generate strong JWT secrets
+   - Use environment variables for sensitive data
+
+2. **Configuration**
+   - Restrict allowed origins in CORS settings
+   - Set appropriate rate limits
+   - Enable all security features
+   - Configure proper logging
+
+3. **Monitoring**
+   - Enable metrics collection
+   - Set up alerts for anomalies
+   - Monitor system resources
+   - Review logs regularly
+
+### Security Checklist
+
+- [ ] Generated secure random JWT secret
+- [ ] Configured HTTPS/TLS
+- [ ] Set restricted CORS policies
+- [ ] Enabled rate limiting
+- [ ] Configured logging
+- [ ] Set up monitoring
+- [ ] Reviewed default configs
+- [ ] Tested security features
+
 ## 🤝 Contributing
 
 Contributions are welcome! Here's how you can help:
@@ -114,7 +147,7 @@ Contributions are welcome! Here's how you can help:
 6. Push to branch (`git push origin feature/amazing-feature`)
 7. Open a Pull Request
 
-### Development Setup
+### Development Guidelines
 
 1. Install development requirements:
 ```bash
@@ -132,6 +165,12 @@ python debug_fastapi.py
 - Keep code modular
 - Add tests for new features
 
+4. Security considerations:
+- Never commit sensitive data
+- Use environment variables for secrets
+- Test security features thoroughly
+- Follow OWASP guidelines
+
 ## 📝 License
 
 This project is MIT licensed - see [LICENSE](LICENSE) for details.
@@ -143,5 +182,6 @@ Give a ⭐️ if this project helped you!
 ## 🔗 Links
 
 - [FastAPI Documentation](https://fastapi.tiangolo.com/)
-- [Security Best Practices](https://owasp.org/www-project-api-security/)
-- [Rate Limiting Explained](https://en.wikipedia.org/wiki/Rate_limiting)
+- [OWASP API Security](https://owasp.org/www-project-api-security/)
+- [JWT Best Practices](https://datatracker.ietf.org/doc/html/rfc8725)
+- [Rate Limiting](https://en.wikipedia.org/wiki/Rate_limiting)
