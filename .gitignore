@@ -4,40 +4,50 @@ __pycache__/
 *$py.class
 *.so
 .Python
-.env
-venv/
-.venv/
-ENV/
 env/
-env.bak/
-venv.bak/
-*.egg-info/
-dist/
 build/
-eggs/
-parts/
-var/
-sdist/
 develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
 .installed.cfg
 *.egg
 
-# IDEs
+# Virtual Environment
+venv/
+.venv/
+ENV/
+
+# IDE
 .idea/
 .vscode/
 *.swp
 *.swo
-.project
-.pydevproject
-.settings/
+*~
 
-# Project specific
-jwt_secret.txt
+# Logs
 *.log
+logs/
+
+# Local development
+.env
 .env.local
 .env.*.local
-.pytest_cache/
 
 # System
 .DS_Store
 Thumbs.db
+
+# Project specific
+*.pyc
+metrics.json
+security-report.json
+*.bak

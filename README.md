@@ -1,88 +1,99 @@
-# System Monitoring Gateway
+# FastAPI Security Gateway
 
-A lightweight system monitoring gateway built with FastAPI that provides real-time system metrics and a web dashboard.
+A robust security gateway built with FastAPI that provides real-time monitoring, threat detection, and protection for your APIs.
 
 ## Features
 
-- Real-time system metrics monitoring (CPU, Memory, Disk)
-- Web-based dashboard for easy visualization
-- Simple REST API endpoints
-- Metric export capabilities in JSON format
-- Zero-configuration setup
+- Real-time traffic monitoring
+- Security event tracking
+- Threat detection and blocking
+- System health monitoring
+- Performance metrics tracking
+- Self-healing capabilities
+- Downloadable security reports
 
-## Quick Start
+## Requirements
 
-1. **Install Dependencies**
-   ```bash
-   pip install -r requirements.txt
-   ```
+- Python 3.8+
+- FastAPI
+- Additional dependencies listed in `requirements.txt`
 
-2. **Start the Server**
-   ```bash
-   python -m uvicorn main:app --host 127.0.0.1 --port 8080
-   ```
-
-3. **Access the Dashboard**
-   - Open http://127.0.0.1:8080/dashboard in your browser
-
-## API Endpoints
-
-### GET /
-Basic system status and uptime information
-```bash
-curl http://127.0.0.1:8080/
-```
-
-### GET /health
-Detailed system health metrics
-```bash
-curl http://127.0.0.1:8080/health
-```
-
-### GET /metrics
-Export complete system metrics report
-```bash
-curl http://127.0.0.1:8080/metrics -o metrics.json
-```
-
-### GET /dashboard
-Web-based monitoring dashboard
-
-## System Requirements
-
-- Python 3.8 or higher
-- Required packages:
-  - fastapi
-  - uvicorn
-  - psutil
-
-## Development
+## Installation
 
 1. Clone the repository
-2. Install dependencies:
-   ```bash
-   pip install -r requirements.txt
-   ```
-3. Run with reload for development:
-   ```bash
-   uvicorn main:app --reload --host 127.0.0.1 --port 8080
-   ```
+```bash
+git clone https://github.com/yourusername/fastapi-security-gateway.git
+cd fastapi-security-gateway
+```
+
+2. Create and activate a virtual environment
+```bash
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+```
+
+3. Install dependencies
+```bash
+pip install -r requirements.txt
+```
+
+## Configuration
+
+1. Configure security policies in `config/security_policies.yaml`
+2. (Optional) Adjust threat detection settings in `threat_detection/anomaly_detection.py`
+3. Environment variables can be set in a `.env` file (see `.env.example` for available options)
+
+## Usage
+
+Start the server:
+```bash
+uvicorn main:app --reload
+```
+
+Access the monitoring dashboard at `http://localhost:8000/static/index.html`
 
 ## Project Structure
 
 ```
-.
-├── main.py              # Main application file
-├── static/             # Static files
-│   ├── dashboard.html  # Web dashboard
-│   └── index.html      # Landing page
-├── requirements.txt    # Project dependencies
-└── README.md          # Documentation
+fastapi-security-gateway/
+├── config/
+│   └── security_policies.yaml    # Security configuration
+├── security/
+│   └── auth.py                  # Authentication handlers
+├── self_healing/
+│   └── controller.py            # Self-healing mechanisms
+├── static/
+│   ├── index.html              # Main monitoring dashboard
+│   └── styles.css              # Dashboard styles
+├── threat_detection/
+│   └── anomaly_detection.py    # Threat detection logic
+├── main.py                     # FastAPI application
+├── requirements.txt            # Project dependencies
+└── .gitignore                 # Git ignore rules
 ```
 
-## License
+## API Endpoints
 
-MIT License - Feel free to use and modify as needed.
+- `/health` - Get system health and security metrics
+- `/metrics/export` - Download detailed security report
+
+## Security Features
+
+1. **Real-time Monitoring**
+   - Request rate tracking
+   - Threat detection
+   - System resource usage
+
+2. **Threat Protection**
+   - Rate limiting
+   - IP blocking
+   - Request validation
+   - Anomaly detection
+
+3. **Self-healing**
+   - Automatic threat mitigation
+   - Performance optimization
+   - Resource management
 
 ## Contributing
 
@@ -91,3 +102,7 @@ MIT License - Feel free to use and modify as needed.
 3. Commit your changes
 4. Push to the branch
 5. Create a Pull Request
+
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
