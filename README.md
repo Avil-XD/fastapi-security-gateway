@@ -20,35 +20,55 @@ A robust security gateway built with FastAPI that provides real-time monitoring,
 
 ## Quick Start
 
-1. **Setup Python Environment**
+### Easy Run
+
+**Windows:**
 ```bash
-# Create virtual environment
+run.bat
+```
+
+**macOS/Linux:**
+```bash
+# Make script executable (first time only)
+chmod +x run.sh
+
+# Run the script
+./run.sh
+```
+
+The script will automatically:
+1. Create a Python virtual environment
+2. Install required dependencies
+3. Start the server
+4. Display the dashboard URL
+
+Once running, open your browser to: `http://localhost:8000/dashboard`
+
+### Manual Setup (Alternative)
+
+If you prefer to run commands manually:
+
+1. Create and activate virtual environment:
+```bash
 python -m venv venv
 
-# Activate virtual environment
-# On Windows:
+# Windows:
 venv\Scripts\activate
-# On macOS/Linux:
+# macOS/Linux:
 source venv/bin/activate
+```
 
-# Install dependencies
+2. Install dependencies:
+```bash
 pip install -r requirements.txt
 ```
 
-2. **Run the Server**
+3. Start server:
 ```bash
-# Option 1: Using python directly
 python main.py
-
-# Option 2: Using uvicorn with auto-reload (recommended for development)
-uvicorn main:app --reload --host 0.0.0.0 --port 8000
 ```
 
-3. **Access the Dashboard**
-   - Open your browser and go to: `http://localhost:8000/dashboard`
-   - The dashboard will automatically update every 2 seconds with real-time metrics
-
-4. **Available Endpoints**
+### Available Endpoints
    - `http://localhost:8000/` - Basic system status
    - `http://localhost:8000/health` - Detailed system health metrics
    - `http://localhost:8000/metrics` - Download detailed metrics report
