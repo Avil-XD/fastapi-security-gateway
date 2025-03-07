@@ -18,39 +18,56 @@ A robust security gateway built with FastAPI that provides real-time monitoring,
 - FastAPI
 - Additional dependencies listed in `requirements.txt`
 
-## Installation
+## Quick Start
 
-1. Clone the repository
+1. **Setup Python Environment**
 ```bash
-git clone https://github.com/yourusername/fastapi-security-gateway.git
-cd fastapi-security-gateway
-```
-
-2. Create and activate a virtual environment
-```bash
+# Create virtual environment
 python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-```
 
-3. Install dependencies
-```bash
+# Activate virtual environment
+# On Windows:
+venv\Scripts\activate
+# On macOS/Linux:
+source venv/bin/activate
+
+# Install dependencies
 pip install -r requirements.txt
 ```
 
-## Configuration
-
-1. Configure security policies in `config/security_policies.yaml`
-2. (Optional) Adjust threat detection settings in `threat_detection/anomaly_detection.py`
-3. Environment variables can be set in a `.env` file (see `.env.example` for available options)
-
-## Usage
-
-Start the server:
+2. **Run the Server**
 ```bash
-uvicorn main:app --reload
+# Option 1: Using python directly
+python main.py
+
+# Option 2: Using uvicorn with auto-reload (recommended for development)
+uvicorn main:app --reload --host 0.0.0.0 --port 8000
 ```
 
-Access the monitoring dashboard at `http://localhost:8000/static/index.html`
+3. **Access the Dashboard**
+   - Open your browser and go to: `http://localhost:8000/dashboard`
+   - The dashboard will automatically update every 2 seconds with real-time metrics
+
+4. **Available Endpoints**
+   - `http://localhost:8000/` - Basic system status
+   - `http://localhost:8000/health` - Detailed system health metrics
+   - `http://localhost:8000/metrics` - Download detailed metrics report
+   - `http://localhost:8000/dashboard` - Web monitoring interface
+
+## Configuration (Optional)
+
+1. Configure security policies in `config/security_policies.yaml`
+2. Adjust threat detection settings in `threat_detection/anomaly_detection.py`
+3. Set environment variables in a `.env` file (see `.env.example` for options)
+
+## Development
+
+The project uses FastAPI with the following structure:
+- `main.py` - Core FastAPI application and API endpoints
+- `static/` - Frontend dashboard files (HTML, CSS)
+- `security/` - Security and authentication logic
+- `threat_detection/` - Threat detection algorithms
+- `self_healing/` - Automatic recovery mechanisms
 
 ## Project Structure
 
