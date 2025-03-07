@@ -1,257 +1,135 @@
-from contextlib import asynccontextmanager
-from fastapi import FastAPI, Request, Response
+"""
+Simple System Monitoring Gateway
+-------------------------------
+A lightweight API gateway that provides system metrics and monitoring capabilities.
+
+Endpoints:
+- GET /: Basic system status
+- GET /health: Detailed system health metrics
+- GET /metrics: Export system metrics as JSON
+- GET /dashboard: Web interface for monitoring
+
+Author: Your Name
+Version: 1.0.0
+"""
+
+from fastapi import FastAPI
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.security import HTTPBasic, HTTPBasicCredentials
-from typing import Dict, Any
-import time
-import yaml
-import json
 import psutil
+import time
 import datetime
-from pathlib import Path
 
-# Global variables
-security_policies = {}
-policy_loader = None
-self_healing_controller = None
-api_analyzer = None
+# Initialize FastAPI
+app = FastAPI(
+    title="System Monitor",
+    description="Simple system monitoring gateway",
+    version="1.0.0"
+)
+
+# Serve static files (dashboard)
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
+# Store startup time
 STARTUP_TIME = time.time()
 
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    # Startup
-    print("Starting initialization...")
-    try:
-        global security_policies, policy_loader, self_healing_controller, api_analyzer
-        
-        # Define PolicyLoader class
-        class PolicyLoader:
-            def __init__(self, policies):
-                self.policies = policies
-            
-            def get_policies(self, section):
-                return self.policies.get(section, {})
+def format_bytes(bytes):
+    """Convert bytes to human readable format"""
+    for unit in ['B', 'KB', 'MB', 'GB', 'TB']:
+        if bytes < 1024:
+            return f"{bytes:.1f}{unit}"
+        bytes /= 1024
 
-        print("Importing custom modules...")
-        from self_healing.controller import SelfHealingController
-        from threat_detection.anomaly_detection import APIAnalyzer
-
-        print("Loading security policies...")
-        config_path = Path("config/security_policies.yaml")
-        print(f"Config path exists: {config_path.exists()}")
-        with open(config_path, "r") as f:
-            security_policies = yaml.safe_load(f)
-        print("Security policies loaded successfully")
-
-        print("Initializing components...")
-        policy_loader = PolicyLoader(security_policies)
-        self_healing_controller = SelfHealingController(policy_loader)
-        api_analyzer = APIAnalyzer()
-        print("All components initialized successfully")
-
-    except Exception as e:
-        print(f"Startup error: {str(e)}")
-        raise
-    
-    yield  # Server is running
-    
-    # Shutdown
-    print("Shutting down...")
-
-# Create FastAPI app with lifespan
-app = FastAPI(
-    title="API Security Gateway",
-    lifespan=lifespan
-)
-
-# Security Configuration
-security = HTTPBasic()
-
-# Middleware Configuration
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-# Static files
-app.mount("/static", StaticFiles(directory="static"), name="static")
+def format_number(n):
+    """Format large numbers with K, M suffix"""
+    if n < 1000:
+        return str(n)
+    elif n < 1000000:
+        return f"{n/1000:.1f}K"
+    else:
+        return f"{n/1000000:.1f}M"
 
 @app.get("/")
 async def root():
-    """Root endpoint with basic system information"""
+    """Root endpoint - Basic system status"""
     return {
         "status": "operational",
-        "version": "1.0.0",
-        "uptime": time.time() - STARTUP_TIME
+        "uptime": str(datetime.timedelta(seconds=int(time.time() - STARTUP_TIME)))
     }
 
 @app.get("/health")
-async def health_check():
-    """Health check endpoint with detailed system metrics"""
+async def health():
+    """Health check endpoint"""
+    cpu = psutil.cpu_percent()
+    memory = psutil.virtual_memory()
+    disk = psutil.disk_usage('/')
+
     return {
-        "status": "healthy",
-        "security_mode": "enforced",
-        "system_info": {
-            "cpu_usage": psutil.cpu_percent(),
-            "memory_usage": psutil.virtual_memory().percent,
-            "uptime": time.time() - STARTUP_TIME
+        "status": "healthy" if cpu < 80 and memory.percent < 80 else "warning",
+        "metrics": {
+            "cpu_usage": f"{cpu}%",
+            "memory_usage": f"{memory.percent}%",
+            "disk_usage": f"{disk.percent}%",
+            "memory_available": format_bytes(memory.available)
         }
     }
+
+@app.get("/metrics")
+async def metrics():
+    """Export detailed system metrics"""
+    cpu = psutil.cpu_percent(interval=1)
+    memory = psutil.virtual_memory()
+    disk = psutil.disk_usage('/')
+    network = psutil.net_io_counters()
+    
+    report = {
+        "timestamp": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        "system_status": {
+            "health": "healthy" if cpu < 80 and memory.percent < 80 else "warning",
+            "summary": "All systems operating normally" if cpu < 80 and memory.percent < 80 
+                      else "High resource usage detected"
+        },
+        "resources": {
+            "cpu": {
+                "usage": f"{cpu}%",
+                "cores": psutil.cpu_count(),
+                "frequency_mhz": f"{psutil.cpu_freq().current:.0f}" if psutil.cpu_freq() else "N/A"
+            },
+            "memory": {
+                "total": format_bytes(memory.total),
+                "available": format_bytes(memory.available),
+                "used": format_bytes(memory.used),
+                "usage": f"{memory.percent}%"
+            },
+            "disk": {
+                "total": format_bytes(disk.total),
+                "free": format_bytes(disk.free),
+                "used": format_bytes(disk.used),
+                "usage": f"{disk.percent}%"
+            },
+            "network": {
+                "bytes_sent": format_bytes(network.bytes_sent),
+                "bytes_received": format_bytes(network.bytes_recv),
+                "packets_sent": format_number(network.packets_sent),
+                "packets_received": format_number(network.packets_recv)
+            }
+        }
+    }
+    
+    return JSONResponse(
+        content=report,
+        headers={
+            "Content-Disposition": 
+                f"attachment; filename=metrics-{datetime.datetime.now().strftime('%Y%m%d-%H%M%S')}.json",
+            "Content-Type": "application/json"
+        }
+    )
 
 @app.get("/dashboard")
 async def dashboard():
-    """Admin dashboard view"""
-    return FileResponse('static/index.html')
-
-@app.get("/analytics")
-async def analytics_view():
-    """Analytics dashboard view"""
-    return {
-        "traffic_stats": {
-            "total_requests": 1000,
-            "average_response_time": "120ms",
-            "error_rate": "0.5%",
-            "requests_per_minute": 60
-        },
-        "security_stats": {
-            "blocked_requests": 50,
-            "sql_injection_attempts": 10,
-            "rate_limit_hits": 20,
-            "invalid_auth_attempts": 15
-        },
-        "performance_metrics": {
-            "p95_response_time": "200ms",
-            "p99_response_time": "450ms",
-            "average_cpu_usage": "45%",
-            "average_memory_usage": "60%"
-        }
-    }
-
-@app.get("/settings")
-async def settings():
-    """Get current gateway settings"""
-    return {
-        "rate_limiting": {
-            "enabled": True,
-            "requests_per_minute": 60,
-            "burst_size": 10
-        },
-        "security": {
-            "mode": "enforced",
-            "max_request_size": "1MB",
-            "allowed_origins": ["*"],
-            "authentication": "required"
-        },
-        "monitoring": {
-            "log_level": "INFO",
-            "metrics_enabled": True,
-            "alert_threshold": 80
-        }
-    }
-
-@app.post("/settings")
-async def update_settings(request: Request):
-    """Update gateway settings"""
-    settings = await request.json()
-    # Validate and apply new settings
-    return {"message": "Settings updated successfully"}
-
-@app.get("/logs")
-async def get_logs(limit: int = 50):
-    """Get recent system logs"""
-    # In a real implementation, this would fetch from a log store
-    return {
-        "logs": [
-            {
-                "timestamp": time.time(),
-                "level": "INFO",
-                "message": "System operating normally",
-                "details": {"cpu": "45%", "memory": "60%"}
-            },
-            {
-                "timestamp": time.time() - 60,
-                "level": "WARNING",
-                "message": "High resource usage detected",
-                "details": {"cpu": "85%", "memory": "75%"}
-            }
-        ]
-    }
-
-@app.post("/api/test")
-async def test_endpoint(request: Request):
-    """Test endpoint for security features"""
-    try:
-        # Get request data
-        request_data = await request.json()
-        
-        # Anomaly detection
-        if not api_analyzer.analyze_request(request_data):
-            return JSONResponse(
-                status_code=403,
-                content={"error": "Anomalous request detected"}
-            )
-
-        # Self-healing checks
-        request_context = {
-            "path": request.url.path,
-            "method": request.method,
-            "headers": dict(request.headers),
-            "query_params": dict(request.query_params),
-            "body": request_data
-        }
-        
-        if not self_healing_controller.apply_measures(request_context):
-            return JSONResponse(
-                status_code=429,
-                content={"error": "Request rejected by self-healing measures"}
-            )
-
-        return {"message": "Request passed security checks"}
-
-    except Exception as e:
-        return JSONResponse(
-            status_code=400,
-            content={"error": str(e)}
-        )
-
-@app.middleware("http")
-async def security_middleware(request: Request, call_next):
-    """Security middleware for all requests"""
-    try:
-        # Check request size
-        content_length = request.headers.get("content-length", 0)
-        max_size = security_policies.get("max_request_size", 1048576)  # Default to 1MB
-        if int(content_length) > max_size:
-            return JSONResponse(
-                status_code=413,
-                content={"detail": "Payload exceeds size limit"}
-            )
-
-        # Process request
-        start_time = time.time()
-        response = await call_next(request)
-        process_time = time.time() - start_time
-
-        # Add security headers
-        response.headers["X-Frame-Options"] = "DENY"
-        response.headers["X-Content-Type-Options"] = "nosniff"
-        response.headers["X-XSS-Protection"] = "1; mode=block"
-        response.headers["Server"] = "API Security Gateway"
-        
-        return response
-
-    except Exception as e:
-        print(f"Middleware error: {str(e)}")
-        return JSONResponse(
-            status_code=500,
-            content={"detail": "Internal server error"}
-        )
+    """Web Dashboard"""
+    return FileResponse('static/dashboard.html')
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="127.0.0.1", port=8000)
+    uvicorn.run(app, host="127.0.0.1", port=8080)

@@ -1,89 +1,88 @@
-import time
-from datetime import timedelta
 from schema import Schema, And, Or, Optional
+from typing import Dict, Any
+import time
 
 class SelfHealingController:
     def __init__(self, policy_loader):
-        self.circuit_states = {}
         self.policy_loader = policy_loader
-        self.active_measures = {
-            'circuit_breaker': self.handle_circuit_breaker,
-            'rate_limit': self.enforce_rate_limit,
-            'schema_validation': self.validate_schema
-        }
+        self.request_counts = {}
+        self.blocked_ips = set()
         
-    def apply_measures(self, request):
-        """Apply all active self-healing measures"""
+    def apply_measures(self, request_context: Dict[str, Any]) -> bool:
+        """Apply self-healing measures to the request"""
         try:
-            policies = self.policy_loader.get_policies('self_healing')
-            if not policies or 'actions' not in policies:
-                return True  # No policies means no restrictions
+            # Get current policies
+            policies = self.policy_loader.get_policies("rate_limiting")
             
-            for measure in policies.get('actions', []):
-                measure_type = measure.get('type')
-                if not measure_type:
-                    continue
+            # Validate request
+            if not self._validate_request(request_context):
+                return False
                 
-                if measure_type in self.active_measures:
-                    try:
-                        if not self.active_measures[measure_type](request, measure):
-                            return False
-                    except Exception as e:
-                        print(f"Error applying measure {measure_type}: {e}")
-                        # Don't fail on individual measure errors
-                        continue
+            # Check rate limits
+            client_ip = request_context.get('headers', {}).get('x-forwarded-for', 'unknown')
+            if not self._check_rate_limit(client_ip, policies):
+                return False
+                
+            # All checks passed
             return True
+            
         except Exception as e:
-            print(f"Error in self-healing: {e}")
+            print(f"Error in self-healing measures: {str(e)}")
             return True  # Fail open on errors
-
-    def handle_circuit_breaker(self, request, config):
-        """Implement circuit breaker pattern"""
-        endpoint = request['path']
-        current_state = self.circuit_states.get(endpoint, 'closed')
-        
-        if current_state == 'open':
-            if time.time() > self.circuit_states[endpoint]['until']:
-                self.circuit_states[endpoint] = {'state': 'half-open'}
+            
+    def _validate_request(self, request_context: Dict[str, Any]) -> bool:
+        """Validate request against security policies"""
+        try:
+            schema = Schema({
+                'path': str,
+                'method': str,
+                'headers': dict,
+                Optional('query_params'): dict,
+                Optional('body'): Or(dict, None)
+            })
+            
+            schema.validate(request_context)
+            return True
+            
+        except Exception as e:
+            print(f"Request validation failed: {str(e)}")
             return False
             
-        try:
-            threshold = float(config.get('threshold', 500))  # Convert to float
-            if request.get('latency', 0) > threshold:
-                self.circuit_states[endpoint] = {
-                    'state': 'open',
-                    'until': time.time() + float(config.get('reset_time', 30))  # Use seconds directly
-                }
-                return False
-        except Exception as e:
-            print(f"Circuit breaker error: {e}")
-            return True  # Fail open
+    def _check_rate_limit(self, client_ip: str, policies: Dict[str, Any]) -> bool:
+        """Check if client has exceeded rate limits"""
+        current_time = time.time()
+        
+        # Initialize or clean up old records
+        if client_ip not in self.request_counts:
+            self.request_counts[client_ip] = {
+                'count': 0,
+                'window_start': current_time
+            }
+        
+        # Check if client is blocked
+        if client_ip in self.blocked_ips:
+            return False
+            
+        # Get rate limit settings
+        max_requests = policies.get('requests_per_minute', 100)
+        window_size = 60  # 1 minute window
+        
+        client_data = self.request_counts[client_ip]
+        
+        # Reset window if expired
+        if current_time - client_data['window_start'] > window_size:
+            client_data.update({
+                'count': 1,
+                'window_start': current_time
+            })
+            return True
+            
+        # Increment request count
+        client_data['count'] += 1
+        
+        # Check if limit exceeded
+        if client_data['count'] > max_requests:
+            self.blocked_ips.add(client_ip)
+            return False
             
         return True
-
-    def enforce_rate_limit(self, request, config):
-        """Dynamic rate limiting based on policies"""
-        # TODO: Implement token bucket algorithm
-        return True  # Temporary implementation
-
-    def validate_schema(self, request, config):
-        """Schema validation using defined API contracts"""
-        try:
-            if config.get('strict', False):
-                return Schema({
-                    'path': And(str, len),
-                    'method': str,
-                    'headers': dict,
-                    'query_params': dict,
-                    Optional('body'): object,
-                    Optional('client_ip'): str
-                }).validate(request)
-            return True
-        except Exception as e:
-            print(f"Schema validation warning: {e}")
-            return True  # Fail open
-
-    def reset_measures(self, endpoint):
-        """Manual reset for circuit breakers"""
-        if endpoint in self.circuit_states:
-            del self.circuit_states[endpoint]
